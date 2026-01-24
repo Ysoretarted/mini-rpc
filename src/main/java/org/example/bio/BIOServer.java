@@ -4,12 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 
 /**
  * bio 一个线程处理一个链接。  本质：read是阻塞的
  */
-public class BIOServerSocket {
+public class BIOServer {
 
 
     public static void main(String[] args) throws IOException {
