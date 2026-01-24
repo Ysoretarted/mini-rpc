@@ -12,17 +12,21 @@ public class BIOServerSocket {
     public static void main(String[] args) throws IOException {
         Socket socket;
         try (ServerSocket serverSocket = new ServerSocket(8088)) {
-            socket = serverSocket.accept();
-        }
-        InputStream inputStream = socket.getInputStream();
-        byte[] buffer = new byte[1024];
-        int length;
-        while((length = inputStream.read(buffer)) != -1){
-            String message = new String(buffer, 0, length);
-            System.out.println(message);
-        }
+            while (true) {
+                System.out.println("==========等待连接==============");
+                socket = serverSocket.accept();
+                InputStream inputStream = socket.getInputStream();
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = inputStream.read(buffer)) != -1) {
+                    String message = new String(buffer, 0, length);
+                    System.out.println(message);
+                }
 
-        System.out.println("客户端断开连接");
+                System.out.println("客户端断开连接");
+                System.out.println();
+            }
+        }
 
 
     }
