@@ -1,27 +1,36 @@
 package org.example.rpcdemo.consumer;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import org.example.rpcdemo.properties.ConsumerProperties;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class Consumer {
+    private String host;
 
+    private int port;
+
+    private EventLoopGroup workEventLoopGroup;
+
+    public Consumer(ConsumerProperties properties) {
+
+        this.host = properties.getHost();
+        this.port = properties.getPort();
+        this.workEventLoopGroup = new NioEventLoopGroup();
+    }
 
     public int add(int a, int b) throws InterruptedException, ExecutionException {
         CompletableFuture<Integer> addFuture = new CompletableFuture<>();
 
         Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(new NioEventLoopGroup())
+        bootstrap.group(workEventLoopGroup)
                 .channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<NioSocketChannel>() {
                     @Override
@@ -43,7 +52,7 @@ public class Consumer {
                     }
                 });
 
-        ChannelFuture channelFuture = bootstrap.connect("localhost", 8888).sync();
+        ChannelFuture channelFuture = bootstrap.connect(host, port).sync();
         //这里也要加换行
         channelFuture.channel().writeAndFlush("add," + a + "," + b + "\n");
 
