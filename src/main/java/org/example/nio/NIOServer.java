@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class NIOServer {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         Selector selector = Selector.open();
 
         ServerSocketChannel ssc = ServerSocketChannel.open();
@@ -40,9 +40,12 @@ public class NIOServer {
                     client.register(selector, SelectionKey.OP_READ);
                 }
                 if (selectionKey.isReadable()) {
-//                    System.out.println("readable事件来了");
+                    System.out.println("readable事件来了");
+                    Thread.sleep(5000);
                     SocketChannel client = (SocketChannel) selectionKey.channel();
 
+                    //4半包现象
+                    //16 粘包现象
                     ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
                     int length = client.read(byteBuffer);
                     if (length == -1) {

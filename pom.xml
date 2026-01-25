@@ -41,10 +41,15 @@
             <version>1.18.34</version>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>io.netty</groupId>-->
+<!--            <artifactId>netty-codec-http</artifactId>-->
+<!--            <version>4.1.112.Final</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>io.netty</groupId>
-            <artifactId>netty-codec-http</artifactId>
-            <version>4.1.112.Final</version>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.119.Final</version>
         </dependency>
     </dependencies>
 
