@@ -12,6 +12,11 @@ import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import lombok.extern.slf4j.Slf4j;
+import org.example.rpcdemo.codec.ZZDecoder;
+import org.example.rpcdemo.codec.ZZRequestEncoder;
+import org.example.rpcdemo.codec.ZZResponseEncoder;
+import org.example.rpcdemo.message.Request;
+import org.example.rpcdemo.message.Response;
 import org.example.rpcdemo.properties.ServerProperties;
 
 @Slf4j
@@ -38,22 +43,27 @@ public class ServiceServer {
                     @Override
                     protected void initChannel(NioSocketChannel nioServerSocketChannel) throws Exception {
                         nioServerSocketChannel.pipeline()
-                                .addLast(new LineBasedFrameDecoder(1024))
-                                .addLast(new StringDecoder())
-                                .addLast(new StringEncoder())
-                                .addLast(new SimpleChannelInboundHandler<String>() {
+//                                .addLast(new LineBasedFrameDecoder(1024))
+                                .addLast(new ZZDecoder())
+                                .addLast(new ZZResponseEncoder())
+                                .addLast(new SimpleChannelInboundHandler<Request>() {
                                     @Override
-                                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String message) throws Exception {
-                                        log.info("收到消息：" + message);
-                                        String[] split = message.split(",");
-                                        String method = split[0];
-                                        int a = Integer.parseInt(split[1]);
-                                        int b = Integer.parseInt(split[2]);
-                                        if (method.equals("add")) {
-                                            int result = add(a, b);
-                                            //这里要加换行
-                                            channelHandlerContext.writeAndFlush(result + "\n");
-                                        }
+                                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Request request) throws Exception {
+                                        log.info("收到消息：" + request);
+                                        System.out.println("收到消息AA" + request);
+
+                                        Response response = new Response();
+                                        response.setResult("随便一个结果");
+                                        channelHandlerContext.channel().writeAndFlush(response);
+//                                        String[] split = message.split(",");
+//                                        String method = split[0];
+//                                        int a = Integer.parseInt(split[1]);
+//                                        int b = Integer.parseInt(split[2]);
+//                                        if (method.equals("add")) {
+//                                            int result = add(a, b);
+//                                            //这里要加换行
+//                                            channelHandlerContext.writeAndFlush(result + "\n");
+//                                        }
 
                                     }
                                 });

@@ -4,20 +4,23 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
+import lombok.extern.slf4j.Slf4j;
+import org.example.rpcdemo.codec.ZZDecoder;
+import org.example.rpcdemo.codec.ZZRequestEncoder;
+import org.example.rpcdemo.message.Request;
+import org.example.rpcdemo.message.Response;
 import org.example.rpcdemo.properties.ConsumerProperties;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+@Slf4j
 public class Consumer {
-    private String host;
+    private final String host;
 
-    private int port;
+    private final int port;
 
-    private EventLoopGroup workEventLoopGroup;
+    private final EventLoopGroup workEventLoopGroup;
 
     public Consumer(ConsumerProperties properties) {
 
@@ -36,27 +39,42 @@ public class Consumer {
                     @Override
                     protected void initChannel(NioSocketChannel nioSocketChannel) throws Exception {
                         nioSocketChannel.pipeline()
-                                .addLast(new LineBasedFrameDecoder(1024))
-                                .addLast(new StringDecoder())
-                                .addLast(new StringEncoder())
-                                .addLast(new SimpleChannelInboundHandler<String>() {
+//                                .addLast(new LineBasedFrameDecoder(1024))
+                                .addLast(new ZZDecoder())
+                                .addLast(new ZZRequestEncoder())
+                                .addLast(new SimpleChannelInboundHandler<Response>() {
                                     @Override
-                                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String message) throws Exception {
-                                        int result = Integer.parseInt(message);
-                                        addFuture.complete(result);
+                                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Response message) throws Exception {
 
-                                        //关闭
-                                        channelHandlerContext.close();
+                                        System.out.println("客户端收到服务端消息：" + message);
+                                        addFuture.complete(1);
+//                                        int result = Integer.parseInt(message);
+//                                        addFuture.complete(result);
+//
+//                                        //关闭
+//                                        channelHandlerContext.close();
                                     }
                                 });
                     }
                 });
 
+        System.out.println("客户端开始连接");
         ChannelFuture channelFuture = bootstrap.connect(host, port).sync();
+        System.out.println("客户端成功连接");
         //这里也要加换行
-        channelFuture.channel().writeAndFlush("add," + a + "," + b + "\n");
+        Request request = new Request();
+        request.setServiceName("serviceName");
+        request.setMethodName("methodName");
+        request.setParamClass(new String[]{"clazz1", "clazz2"});
+        request.setParams(new String[]{"1", "2"});
 
-        return addFuture.get();
+
+//        channelFuture.channel().writeAndFlush("add," + a + "," + b + "\n");
+        channelFuture.channel().writeAndFlush(request);
+        System.out.println("客户端发送结束");
+        Integer i = addFuture.get();
+        System.out.println("客户端拿到结果");
+        return i;
     }
 
 }
