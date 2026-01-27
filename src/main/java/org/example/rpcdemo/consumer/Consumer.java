@@ -56,6 +56,7 @@ public class Consumer {
                                         } else {
                                             addFuture.complete((Integer) response.getResult());
                                         }
+                                        channelHandlerContext.channel().close(); //通信完成后得关掉。    这里每一次链接都是新的channel
 
                                     }
                                 });
