@@ -7,6 +7,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.example.rpcdemo.codec.ZZDecoder;
 import org.example.rpcdemo.codec.ZZRequestEncoder;
+import org.example.rpcdemo.exception.RpcException;
 import org.example.rpcdemo.message.Request;
 import org.example.rpcdemo.message.Response;
 import org.example.rpcdemo.properties.ConsumerProperties;
@@ -46,35 +47,35 @@ public class Consumer {
                                 .addLast(new SimpleChannelInboundHandler<Response>() {
                                     @Override
                                     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Response response) throws Exception {
+                                        log.info("客户端收到服务端消息：{}", response);
+                                        if (response.getCode() != 200) {
+                                            log.warn("服务端运行失败");
+                                            addFuture.completeExceptionally(new RpcException("服务运行失败"));
+                                        } else {
+                                            addFuture.complete((Integer) response.getResult());
+                                        }
 
-                                        System.out.println("客户端收到服务端消息：" + response);
-                                        addFuture.complete((Integer) response.getResult());
-//                                        int result = Integer.parseInt(message);
-//                                        addFuture.complete(result);
-//
-//                                        //关闭
-//                                        channelHandlerContext.close();
                                     }
                                 });
                     }
                 });
 
-        System.out.println("客户端开始连接");
+        log.info("客户端开始连接111");
         ChannelFuture channelFuture = bootstrap.connect(host, port).sync();
-        System.out.println("客户端成功连接");
+        log.info("客户端成功连接222");
         //这里也要加换行
         Request request = new Request();
         request.setServiceName(OperationService.class.getName());
 //        request.setMethodName("privateAdd");
         request.setMethodName("add");
         request.setParamClass(new Class[]{int.class, int.class});
-        request.setParams(new Object[]{1, 2});
+        request.setParams(new Object[]{a, b});
 
 //        channelFuture.channel().writeAndFlush("add," + a + "," + b + "\n");
         channelFuture.channel().writeAndFlush(request);
-        System.out.println("客户端发送结束");
+        log.info("客户端发送结束");
         Integer i = addFuture.get();
-        System.out.println("客户端拿到结果_" + i);
+        log.info("客户端拿到结果_{}", i);
         return i;
     }
 

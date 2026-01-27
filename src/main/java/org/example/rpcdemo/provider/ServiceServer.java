@@ -8,18 +8,12 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.example.rpcdemo.codec.ZZDecoder;
-import org.example.rpcdemo.codec.ZZRequestEncoder;
 import org.example.rpcdemo.codec.ZZResponseEncoder;
 import org.example.rpcdemo.message.Request;
 import org.example.rpcdemo.message.Response;
 import org.example.rpcdemo.properties.ServerProperties;
-import org.example.rpcdemo.service.OperationService;
-import org.example.rpcdemo.service.OperationServiceImpl;
 
 @Slf4j
 public class ServiceServer {
@@ -56,28 +50,7 @@ public class ServiceServer {
 //                                .addLast(new LineBasedFrameDecoder(1024))
                                 .addLast(new ZZDecoder())
                                 .addLast(new ZZResponseEncoder())
-                                .addLast(new SimpleChannelInboundHandler<Request>() {
-                                    @Override
-                                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Request request) throws Exception {
-                                        System.out.println("收到消息AA" + request);
-                                        ProviderRegistry.InvocationWrapper<?> service = providerRegistry.getService(request.getServiceName());
-                                        Object invoke = service.invoke(request.getMethodName(), request.getParamClass(), request.getParams());
-
-                                        Response response = new Response();
-                                        response.setResult(invoke);
-                                        channelHandlerContext.channel().writeAndFlush(response);
-//                                        String[] split = message.split(",");
-//                                        String method = split[0];
-//                                        int a = Integer.parseInt(split[1]);
-//                                        int b = Integer.parseInt(split[2]);
-//                                        if (method.equals("add")) {
-//                                            int result = add(a, b);
-//                                            //这里要加换行
-//                                            channelHandlerContext.writeAndFlush(result + "\n");
-//                                        }
-
-                                    }
-                                });
+                                .addLast(new ProviderHandler());
                     }
                 });
 
@@ -93,7 +66,39 @@ public class ServiceServer {
         }
     }
 
-    private static int add(int a, int b) {
-        return a + b;
+    public class ProviderHandler extends SimpleChannelInboundHandler<Request>{
+
+        @Override
+        protected void channelRead0(ChannelHandlerContext channelHandlerContext, Request request) throws Exception {
+            ProviderRegistry.InvocationWrapper<?> service = providerRegistry.getService(request.getServiceName());
+            if(service == null){
+                log.error("接口没找到:{}", request.getServiceName());
+                Response fail = Response.FAIL("接口没找到" + request.getServiceName());
+                channelHandlerContext.channel().writeAndFlush(fail);
+            }
+
+            try {
+
+                Object invoke = service.invoke(request.getMethodName(), request.getParamClass(), request.getParams());
+
+                Response response = Response.SUCCESS(invoke);
+                channelHandlerContext.channel().writeAndFlush(response);
+            } catch (Exception e) {
+                log.error("接口:{}运行失败,方法:{},参数:{}", request.getServiceName(),request.getMethodName(), request.getParams());
+                Response fail = Response.FAIL("接口没找到" + request.getServiceName());
+                channelHandlerContext.channel().writeAndFlush(fail);
+            }
+//          String[] split = message.split(",");
+//          String method = split[0];
+//          int a = Integer.parseInt(split[1]);
+//          int b = Integer.parseInt(split[2]);
+//          if (method.equals("add")) {
+//              int result = add(a, b);
+//              //这里要加换行
+//              channelHandlerContext.writeAndFlush(result + "\n");
+//          }
+
+        }
     }
+
 }

@@ -40,7 +40,6 @@ public class ProviderRegistry {
 
 
         public Object invoke(String methodName, Class<?>[] paramClass, Object[] params) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-
             //这里不能拿实例的class去获取方法, 可能并不是我们想注册的
 //            Method method = instance.getClass().getDeclaredMethod(methodName, paramClass);
             Method method = interfaceClass.getDeclaredMethod(methodName, paramClass);
