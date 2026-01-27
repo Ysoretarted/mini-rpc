@@ -79,13 +79,14 @@ public class ServiceServer {
 
             try {
 
-                Object invoke = service.invoke(request.getMethodName(), request.getParamClass(), request.getParams());
+                Object result = service.invoke(request.getMethodName(), request.getParamClass(), request.getParams());
+                log.info("接口:{},函数:{}被调用了,结果是{}", request.getServiceName(), request.getMethodName(), result);
 
-                Response response = Response.SUCCESS(invoke);
+                Response response = Response.SUCCESS(result);
                 channelHandlerContext.channel().writeAndFlush(response);
             } catch (Exception e) {
-                log.error("接口:{}运行失败,方法:{},参数:{}", request.getServiceName(),request.getMethodName(), request.getParams());
-                Response fail = Response.FAIL("接口没找到" + request.getServiceName());
+                log.error("接口:{}运行失败,方法:{},参数:{}", request.getServiceName(),request.getMethodName(), request.getParams(), e);
+                Response fail = Response.FAIL(e.getMessage());
                 channelHandlerContext.channel().writeAndFlush(fail);
             }
 //          String[] split = message.split(",");
@@ -98,6 +99,22 @@ public class ServiceServer {
 //              channelHandlerContext.writeAndFlush(result + "\n");
 //          }
 
+        }
+
+        @Override
+        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+            log.info("地址:{}链接了", ctx.channel().remoteAddress());
+        }
+
+        @Override
+        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+            log.info("地址:{}断开了链接", ctx.channel().remoteAddress());
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+            log.error("发生了异常", cause );
+            ctx.channel().close();
         }
     }
 

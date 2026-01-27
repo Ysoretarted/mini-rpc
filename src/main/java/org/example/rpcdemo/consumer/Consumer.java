@@ -15,6 +15,8 @@ import org.example.rpcdemo.service.OperationService;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public class Consumer {
@@ -31,7 +33,7 @@ public class Consumer {
         this.workEventLoopGroup = new NioEventLoopGroup();
     }
 
-    public int add(int a, int b) throws InterruptedException, ExecutionException {
+    public int add(int a, int b) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Integer> addFuture = new CompletableFuture<>();
 
         Bootstrap bootstrap = new Bootstrap();
@@ -50,7 +52,7 @@ public class Consumer {
                                         log.info("客户端收到服务端消息：{}", response);
                                         if (response.getCode() != 200) {
                                             log.warn("服务端运行失败");
-                                            addFuture.completeExceptionally(new RpcException("服务运行失败"));
+                                            addFuture.completeExceptionally(new RpcException(response.getErrorMsg()));
                                         } else {
                                             addFuture.complete((Integer) response.getResult());
                                         }
@@ -74,7 +76,9 @@ public class Consumer {
 //        channelFuture.channel().writeAndFlush("add," + a + "," + b + "\n");
         channelFuture.channel().writeAndFlush(request);
         log.info("客户端发送结束");
-        Integer i = addFuture.get();
+
+        //即使这里超时了， channelRead0还是会收到服务端的消息。  所以再这之后维护了一个在途请求
+        Integer i = addFuture.get(3, TimeUnit.SECONDS);
         log.info("客户端拿到结果_{}", i);
         return i;
     }
