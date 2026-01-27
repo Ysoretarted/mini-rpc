@@ -11,7 +11,7 @@ public class Request {
 
     private String methodName;
 
-    private String[] paramClass;
+    private Class<?>[] paramClass;
 
-    private String[] params;
+    private Object[] params;
 }

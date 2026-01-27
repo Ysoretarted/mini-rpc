@@ -10,6 +10,7 @@ import org.example.rpcdemo.codec.ZZRequestEncoder;
 import org.example.rpcdemo.message.Request;
 import org.example.rpcdemo.message.Response;
 import org.example.rpcdemo.properties.ConsumerProperties;
+import org.example.rpcdemo.service.OperationService;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -44,10 +45,10 @@ public class Consumer {
                                 .addLast(new ZZRequestEncoder())
                                 .addLast(new SimpleChannelInboundHandler<Response>() {
                                     @Override
-                                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Response message) throws Exception {
+                                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Response response) throws Exception {
 
-                                        System.out.println("客户端收到服务端消息：" + message);
-                                        addFuture.complete(1);
+                                        System.out.println("客户端收到服务端消息：" + response);
+                                        addFuture.complete((Integer) response.getResult());
 //                                        int result = Integer.parseInt(message);
 //                                        addFuture.complete(result);
 //
@@ -63,17 +64,17 @@ public class Consumer {
         System.out.println("客户端成功连接");
         //这里也要加换行
         Request request = new Request();
-        request.setServiceName("serviceName");
-        request.setMethodName("methodName");
-        request.setParamClass(new String[]{"clazz1", "clazz2"});
-        request.setParams(new String[]{"1", "2"});
-
+        request.setServiceName(OperationService.class.getName());
+//        request.setMethodName("privateAdd");
+        request.setMethodName("add");
+        request.setParamClass(new Class[]{int.class, int.class});
+        request.setParams(new Object[]{1, 2});
 
 //        channelFuture.channel().writeAndFlush("add," + a + "," + b + "\n");
         channelFuture.channel().writeAndFlush(request);
         System.out.println("客户端发送结束");
         Integer i = addFuture.get();
-        System.out.println("客户端拿到结果");
+        System.out.println("客户端拿到结果_" + i);
         return i;
     }
 

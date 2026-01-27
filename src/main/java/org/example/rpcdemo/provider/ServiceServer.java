@@ -18,6 +18,8 @@ import org.example.rpcdemo.codec.ZZResponseEncoder;
 import org.example.rpcdemo.message.Request;
 import org.example.rpcdemo.message.Response;
 import org.example.rpcdemo.properties.ServerProperties;
+import org.example.rpcdemo.service.OperationService;
+import org.example.rpcdemo.service.OperationServiceImpl;
 
 @Slf4j
 public class ServiceServer {
@@ -27,13 +29,21 @@ public class ServiceServer {
 
     private final EventLoopGroup workEventLoopGroup;
 
+    private final ProviderRegistry providerRegistry;
+
     public ServiceServer(ServerProperties properties) {
         this.port = properties.getPort();
         this.bossEventLoopGroup = new NioEventLoopGroup();
         this.workEventLoopGroup = new NioEventLoopGroup(4);
+        this.providerRegistry = new ProviderRegistry();
+    }
+
+    public <I> void registry(Class<I> interfaceClass, I serviceInstance){
+        providerRegistry.registry(interfaceClass, serviceInstance);
     }
 
     public void start() throws InterruptedException {
+
         ServerBootstrap serverBootstrap = new ServerBootstrap();
 
         serverBootstrap.group(bossEventLoopGroup, workEventLoopGroup)
@@ -49,11 +59,12 @@ public class ServiceServer {
                                 .addLast(new SimpleChannelInboundHandler<Request>() {
                                     @Override
                                     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Request request) throws Exception {
-                                        log.info("收到消息：" + request);
                                         System.out.println("收到消息AA" + request);
+                                        ProviderRegistry.InvocationWrapper<?> service = providerRegistry.getService(request.getServiceName());
+                                        Object invoke = service.invoke(request.getMethodName(), request.getParamClass(), request.getParams());
 
                                         Response response = new Response();
-                                        response.setResult("随便一个结果");
+                                        response.setResult(invoke);
                                         channelHandlerContext.channel().writeAndFlush(response);
 //                                        String[] split = message.split(",");
 //                                        String method = split[0];
