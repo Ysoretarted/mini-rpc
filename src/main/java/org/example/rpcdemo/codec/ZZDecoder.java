@@ -23,7 +23,6 @@ public class ZZDecoder extends LengthFieldBasedFrameDecoder {
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
         log.info("ZZDecoder start decode");
-        System.out.println("ZZDecoder start decode");
         ByteBuf frame = (ByteBuf) super.decode(ctx, in);
 
 

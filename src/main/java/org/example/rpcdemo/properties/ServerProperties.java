@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class ServerProperties {
 
-    private int port = 8088;
+    private int port = 8089;
 }

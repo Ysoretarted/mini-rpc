@@ -2,10 +2,13 @@ package org.example.rpcdemo.message;
 
 import lombok.Data;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 @Data
 public class Request {
+    private static final AtomicInteger REQUEST_ID_COUNTER = new AtomicInteger(0);
 
-    private String requestId;
+    private Integer requestId = REQUEST_ID_COUNTER.getAndIncrement();
 
     private String serviceName;
 

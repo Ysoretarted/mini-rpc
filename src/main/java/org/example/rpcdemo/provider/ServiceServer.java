@@ -73,7 +73,7 @@ public class ServiceServer {
             ProviderRegistry.InvocationWrapper<?> service = providerRegistry.getService(request.getServiceName());
             if(service == null){
                 log.error("接口没找到:{}", request.getServiceName());
-                Response fail = Response.FAIL("接口没找到" + request.getServiceName());
+                Response fail = Response.FAIL(request.getRequestId(), "接口没找到" + request.getServiceName());
                 channelHandlerContext.channel().writeAndFlush(fail);
             }
 
@@ -82,11 +82,11 @@ public class ServiceServer {
                 Object result = service.invoke(request.getMethodName(), request.getParamClass(), request.getParams());
                 log.info("接口:{},函数:{}被调用了,结果是{}", request.getServiceName(), request.getMethodName(), result);
 
-                Response response = Response.SUCCESS(result);
+                Response response = Response.SUCCESS(request.getRequestId(), result);
                 channelHandlerContext.channel().writeAndFlush(response);
             } catch (Exception e) {
                 log.error("接口:{}运行失败,方法:{},参数:{}", request.getServiceName(),request.getMethodName(), request.getParams(), e);
-                Response fail = Response.FAIL(e.getMessage());
+                Response fail = Response.FAIL(request.getRequestId(), e.getMessage());
                 channelHandlerContext.channel().writeAndFlush(fail);
             }
 //          String[] split = message.split(",");

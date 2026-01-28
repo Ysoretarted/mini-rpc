@@ -12,11 +12,25 @@ public class ConsumerApp {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, TimeoutException {
         Consumer consumer = new Consumer(new ConsumerProperties());
-        while(true){
-            System.out.println(consumer.add(7, 2));
-            Thread.sleep(1000);
+
+        for(int i = 0; i < 2; i++){
+            buildThread(consumer).start();
         }
+    }
 
-
+    private static Thread buildThread(Consumer consumer) {
+        return new Thread(() -> {
+            for (int i = 0; i < 100; i++) {
+                try {
+                    System.out.println(i + "+" + 2 * i + "=" + consumer.add(i, 2 * i));
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                } catch (ExecutionException e) {
+                    throw new RuntimeException(e);
+                } catch (TimeoutException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 }
